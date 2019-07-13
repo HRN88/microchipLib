@@ -5,7 +5,8 @@
 #define BRG_16 1
 #define BRG_8 0
 
-void startSerial(int baudrate, long FOSC, int mode, int brg_16){
+
+void configSerial(int baudrate, long FOSC, int mode, int brg_16){
     int n;
     if(!mode){
         TXSTAbits.SYNC = 0;     //For synchronous mode
@@ -15,7 +16,6 @@ void startSerial(int baudrate, long FOSC, int mode, int brg_16){
     }  
     
    //Define RC6 like output TX and RC7 like input
-    RCSTAbits.SPEN = 1;     //Serial port enable bit
     TRISCbits.RC6 = 0;      //Output Tx
     TRISCbits.RC7 = 1;      //Input Rx
     
@@ -30,14 +30,14 @@ void startSerial(int baudrate, long FOSC, int mode, int brg_16){
     TXSTAbits.BRGH = 1;     //For high speed
   
      
-    if(brg_16){
+    if(brg_16 == 1){
         //No funciona correctamente
         BAUDCONbits.BRG16 = 1;
         n = (int)((FOSC / baudrate) / 4) - 1;
         SPBRG = (int)(n & 0x00FF);
         SPBRGH = (int)(n & 0xFF00);
     }
-    else{
+    else if (brg_16 == 0){
         //Si funciona correctamente
         BAUDCONbits.BRG16 = 0;
         n = (int)((FOSC / baudrate) / 16) - 1;
@@ -84,9 +84,16 @@ void closeSerial(){
     PIE1bits.RCIE = 1; 
     
 }
-
+void startSerial(){
+	 RCSTAbits.SPEN = 1;     //Serial port enable bit
+}
 char readSerial(){
     //Read Serial with polling
     while(!PIR1bits.RCIF);
     return RCREG;
+}
+void putch(unsigned char c){
+	//For use stdout. We can use printf
+	TXREG = c;
+    while(!TXSTAbits.TRMT);    
 }
